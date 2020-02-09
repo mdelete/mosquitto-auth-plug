@@ -292,7 +292,6 @@ int be_pg_aclcheck(void *handle, const char *clientid, const char *username, con
 
 	_log(LOG_DEBUG, "USERNAME: %s, TOPIC: %s, acc: %d", username, topic, acc);
 
-
 	if (!conf || !conf->aclquery)
 		return BACKEND_DEFER;
 
@@ -333,14 +332,24 @@ int be_pg_aclcheck(void *handle, const char *clientid, const char *username, con
 			 * match and break out of loop.
 			 */
 
+			/* FIXME: subscription with wildcards
+			   mosquitto_topic_matches_sub() does not work in this case.
+			   This is a quick fix. It allows access on an exact match, with is always ok.
+			*/
+			if (acc == MOSQ_ACL_SUBSCRIBE && strcmp(topic,v) == 0) {
+				_log(LOG_DEBUG, "  postgres: exact match ok");
+				match = BACKEND_ALLOW;
+				break;
+			}
+
 			char *expanded;
 
 			t_expand(clientid, username, v, &expanded);
 			if (expanded && *expanded) {
 				int retval = mosquitto_topic_matches_sub(expanded, topic, &bf);
 				if (bf) match = BACKEND_ALLOW;
-				_log(LOG_DEBUG, "  postgres: topic_matches(%s, %s) == %d  retval=%d",
-				     expanded, v, bf, retval);
+				_log(LOG_DEBUG, "  postgres: topic_matches(%s, %s, %s) == %d  retval=%d",
+				     expanded, v, topic, bf, retval);
 
 				free(expanded);
 			}

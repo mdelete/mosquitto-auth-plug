@@ -336,7 +336,7 @@ int be_pg_aclcheck(void *handle, const char *clientid, const char *username, con
 			   mosquitto_topic_matches_sub() does not work in this case.
 			   This is a quick fix. It allows access on an exact match, with is always ok.
 			*/
-			if (acc == MOSQ_ACL_SUBSCRIBE && strcmp(topic,v) == 0) {
+			if (acc == 4 /*MOSQ_ACL_SUBSCRIBE*/ && strcmp(topic,v) == 0) {
 				_log(LOG_DEBUG, "  postgres: exact match ok");
 				match = BACKEND_ALLOW;
 				break;

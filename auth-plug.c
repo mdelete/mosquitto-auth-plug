@@ -103,7 +103,16 @@ int mosquitto_auth_plugin_version(void)
 	log_init();
 	_log(LOG_NOTICE, "*** auth-plug: startup");
 
-	return MOSQ_AUTH_PLUGIN_VERSION;
+	//return MOSQ_AUTH_PLUGIN_VERSION;
+  #ifdef MOSQ_AUTH_PLUGIN_VERSION
+    #if MOSQ_AUTH_PLUGIN_VERSION == 5
+      return 4; // This is v2.0, use the backwards compatibility
+    #else
+      return MOSQ_AUTH_PLUGIN_VERSION;
+    #endif
+  #else
+    return 4;
+  #endif
 }
 
 int mosquitto_auth_plugin_init(void **userdata, struct mosquitto_auth_opt *auth_opts, int auth_opt_count)
@@ -498,8 +507,10 @@ int mosquitto_auth_security_cleanup(void *userdata, struct mosquitto_auth_opt *a
 }
 
 
-#if MOSQ_AUTH_PLUGIN_VERSION >=3
-int mosquitto_auth_unpwd_check(void *userdata, struct mosquitto *client, const char *username, const char *password)
+#if MOSQ_AUTH_PLUGIN_VERSION >= 4
+int mosquitto_auth_unpwd_check(void *user_data, struct mosquitto *client, const char *username, const char *password)
+#elif MOSQ_AUTH_PLUGIN_VERSION >=3
+int mosquitto_auth_unpwd_check(void *userdata, const struct mosquitto *client, const char *username, const char *password)
 #else
 int mosquitto_auth_unpwd_check(void *userdata, const char *username, const char *password)
 #endif
@@ -597,8 +608,10 @@ int mosquitto_auth_unpwd_check(void *userdata, const char *username, const char 
 	return granted;
 }
 
-#if MOSQ_AUTH_PLUGIN_VERSION >= 3
-int mosquitto_auth_acl_check(void *userdata, int access, struct mosquitto *client, const struct mosquitto_acl_msg *msg)
+#if MOSQ_AUTH_PLUGIN_VERSION >= 4
+int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *client, const struct mosquitto_acl_msg *msg)
+#elif MOSQ_AUTH_PLUGIN_VERSION >= 3
+int mosquitto_auth_acl_check(void *userdata, int access, const struct mosquitto *client, const struct mosquitto_acl_msg *msg)
 #else
 int mosquitto_auth_acl_check(void *userdata, const char *clientid, const char *username, const char *topic, int access)
 #endif
@@ -748,8 +761,10 @@ int mosquitto_auth_acl_check(void *userdata, const char *clientid, const char *u
 }
 
 
-#if MOSQ_AUTH_PLUGIN_VERSION >= 3
-int mosquitto_auth_psk_key_get(void *userdata, struct mosquitto *client, const char *hint, const char *identity, char *key, int max_key_len)
+#if MOSQ_AUTH_PLUGIN_VERSION >= 4
+int mosquitto_auth_psk_key_get(void *user_data, struct mosquitto *client, const char *hint, const char *identity, char *key, int max_key_len)
+#elif MOSQ_AUTH_PLUGIN_VERSION >= 3
+int mosquitto_auth_psk_key_get(void *userdata, const struct mosquitto *client, const char *hint, const char *identity, char *key, int max_key_len)
 #else
 int mosquitto_auth_psk_key_get(void *userdata, const char *hint, const char *identity, char *key, int max_key_len)
 #endif
